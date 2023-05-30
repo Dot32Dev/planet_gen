@@ -1,4 +1,5 @@
 use noise::{NoiseFn, Simplex, Perlin};
+use bevy::math::Vec2;
 
 pub fn generate_vertices(
 	square_size: f32, // Detail level
@@ -20,7 +21,19 @@ pub fn generate_vertices(
             let x = col as f32 * square_size - (cols as f32 * square_size) / 2.;
             let y = row as f32 * square_size - (rows as f32 * square_size) / 2.;
 
-            let noise = simplex.get([x as f64 * x_y_scale as f64, y as f64 * x_y_scale as f64, z_value as f64]) as f32 + darkness;
+			let distance_from_center = Vec2::new(x as f32, y as f32).length();
+
+			let mut noise = simplex.get([x as f64 * x_y_scale as f64, y as f64 * x_y_scale as f64, z_value as f64]) as f32 + darkness;
+			
+			// Noise should be as normal when distance < 150, but fade out when distance > 150 and distance < 300
+			if distance_from_center > 150.0 && distance_from_center < 300.0 {
+				noise = (1.0 - inverse_lerp(150.0, 300.0, distance_from_center)) * noise;
+			}
+
+			if distance_from_center > 300.0 {
+				noise = 0.0;
+			}
+			
 
             grid[row][col] = noise;
 

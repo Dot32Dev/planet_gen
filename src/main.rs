@@ -32,9 +32,9 @@ fn main() {
             z_value: 0.0,
             lerped: true,
             animate: false,
-            x_y_scale: 0.007,
+            x_y_scale: 0.0225,
             wireframe: false,
-            darkness: 0.5,
+            darkness: 0.54,
         })
         .insert_resource(ClearColor(Color::rgb(0.68, 0.97, 0.99)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -54,21 +54,21 @@ fn main() {
 
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
+    // mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    commands.spawn((
-        MaterialMesh2dBundle {
-            transform: Transform::from_xyz(0.0, 0.0, 0.1),
-            material: materials.add(Color::rgb(108.0/255.0, 177.0/255.0, 5.0/255.0).into()),
-            ..default()
-        }, 
-        MarchingSquares {
-            size: 300.0,
-        },
-    ));
+    // commands.spawn((
+    //     MaterialMesh2dBundle {
+    //         transform: Transform::from_xyz(0.0, 0.0, 0.1),
+    //         material: materials.add(Color::rgb(108.0/255.0, 177.0/255.0, 5.0/255.0).into()),
+    //         ..default()
+    //     }, 
+    //     MarchingSquares {
+    //         size: 300.0,
+    //     },
+    // ));
     commands.spawn((
         MaterialMesh2dBundle {
             transform: Transform::from_xyz(0.0, 0.0, 0.2),
@@ -76,7 +76,7 @@ fn setup(
             ..default()
         }, 
         MarchingSquares {
-            size: 295.0,
+            size: 300.0,
         },
     ));
     commands.spawn((
@@ -86,7 +86,7 @@ fn setup(
             ..default()
         }, 
         MarchingSquares {
-            size: 270.0,
+            size: 140.0,
         },
     ));
 }
