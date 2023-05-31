@@ -25,6 +25,11 @@ struct MarchingSquares {
     size: f32,
 }
 
+#[derive(Component)]
+struct Wireframe {
+    lines: Vec<(Vec3, Vec3)>,
+}
+
 fn main() {
     App::new()
         // .init_resource::<UiState>()
@@ -51,6 +56,7 @@ fn main() {
         .add_startup_system(setup)
         .add_system(ui_example_system)
         .add_system(marching_squares_system)
+        .add_system(wifreframe_update)
         .run();
 }
 
@@ -135,13 +141,13 @@ fn ui_example_system(
 
 fn marching_squares_system(
     mut ui_state: ResMut<UiState>,
-    mut marching_squares_meshes: Query<(&mut Mesh2dHandle, &MarchingSquares)>,
+    mut marching_squares_meshes: Query<(&mut Mesh2dHandle, &MarchingSquares, Entity)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut lines: ResMut<DebugLines>,
+    mut commands: Commands,
 ) {
     // println!("marching_squares_meshes: {:?}", marching_squares_meshes.iter().len());
     if !ui_state.is_up_to_date {
-        for (mut mesh_handle, marching_square) in marching_squares_meshes.iter_mut() {
+        for (mut mesh_handle, marching_square, entity) in marching_squares_meshes.iter_mut() {
             // let mut mesh = meshes.get_mut(mesh_handle);
             // if mesh.is_some() {
             //     let (positions, normals, uvs, indices) = generate_tiles(ui_state.detail_level as f32, ui_state.z_value as f32, ui_state.lerped);
@@ -195,6 +201,7 @@ fn marching_squares_system(
             }
             
             if ui_state.wireframe {
+                let mut wireframe = Vec::new();
                 // Draw debug lines for every triangle (fake wireframe)
                 for i in 0..indices.len() / 3 {
                     let i = i * 3;
@@ -204,10 +211,27 @@ fn marching_squares_system(
                     // lines.line_colored(a.extend(0.1), b.extend(0.1), 0.1, Color::RED);
                     // lines.line_colored(b.extend(0.1), c.extend(0.1), 0.1, Color::RED);
                     // lines.line_colored(c.extend(0.1), a.extend(0.1), 0.1, Color::RED);
-                    lines.line_colored(Vec3::new(a[0], a[1], 0.1), Vec3::new(b[0], b[1], 0.1), 0.0, Color::BLACK);
-                    lines.line_colored(Vec3::new(b[0], b[1], 0.1), Vec3::new(c[0], c[1], 0.1), 0.0, Color::BLACK);
-                    lines.line_colored(Vec3::new(c[0], c[1], 0.1), Vec3::new(a[0], a[1], 0.1), 0.0, Color::BLACK);
+                    // lines.line_colored(Vec3::new(a[0], a[1], 0.1), Vec3::new(b[0], b[1], 0.1), 0.0, Color::BLACK);
+                    // lines.line_colored(Vec3::new(b[0], b[1], 0.1), Vec3::new(c[0], c[1], 0.1), 0.0, Color::BLACK);
+                    // lines.line_colored(Vec3::new(c[0], c[1], 0.1), Vec3::new(a[0], a[1], 0.1), 0.0, Color::BLACK);
+                    wireframe.push((Vec3::new(a[0], a[1], 0.1), Vec3::new(b[0], b[1], 0.1)));
+                    wireframe.push((Vec3::new(b[0], b[1], 0.1), Vec3::new(c[0], c[1], 0.1)));
+                    wireframe.push((Vec3::new(c[0], c[1], 0.1), Vec3::new(a[0], a[1], 0.1)));
                 }
+                // Wireframe {
+                //     lines: vec![],
+                // },
+                commands.entity(entity).insert(Wireframe {
+                    lines: wireframe,
+                });
+                // match wireframe_component {
+                //     Some(mut wireframe_comp) => {
+                //         wireframe_comp.lines = wireframe;
+                //     },
+                //     None => ()
+                // }
+            } else {
+                commands.entity(entity).remove::<Wireframe>();
             }
 
             let mut new_mesh = Mesh::new(PrimitiveTopology::TriangleList);
@@ -219,5 +243,16 @@ fn marching_squares_system(
             *mesh_handle = meshes.add(new_mesh).into();
         }
         ui_state.is_up_to_date = true;
+    }
+}
+
+fn wifreframe_update(
+    query: Query<(&Wireframe)>,
+    mut lines: ResMut<DebugLines>,
+) {
+    for wireframe in query.iter() {
+        for line in wireframe.lines.iter() {
+            lines.line_colored(line.0, line.1, 0.0, Color::BLACK);
+        }
     }
 }

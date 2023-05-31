@@ -26,7 +26,7 @@ pub fn generate_vertices(
 			let mut noise = simplex.get([x as f64 * x_y_scale as f64, y as f64 * x_y_scale as f64, z_value as f64]) as f32 + darkness;
 			
 			// Noise should be as normal when distance < 150, but fade out when distance > 150 and distance < 300
-			if distance_from_center > 150.0 && distance_from_center < 300.0 {
+			if distance_from_center > 150.0 {
 				noise = (1.0 - inverse_lerp(150.0, 300.0, distance_from_center)) * noise;
 			}
 
