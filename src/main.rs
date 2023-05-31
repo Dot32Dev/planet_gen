@@ -17,6 +17,7 @@ struct UiState {
     x_y_scale: f32,
     wireframe: bool,
     darkness: f32,
+    is_up_to_date: bool,
 }
 
 #[derive(Component)]
@@ -35,6 +36,7 @@ fn main() {
             x_y_scale: 0.0225,
             wireframe: false,
             darkness: 0.54,
+            is_up_to_date: false,
         })
         .insert_resource(ClearColor(Color::rgb(0.68, 0.97, 0.99)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -98,30 +100,47 @@ fn ui_example_system(
 ) {
     egui::Window::new("Settings").show(contexts.ctx_mut(), |ui| {
         ui.label(format!("FPS: {}", (1.0 / Time::delta_seconds(&time)).floor()));
-        ui.add(egui::Slider::new(&mut ui_state.detail_level, 3..=50).text("Grid Size (Lower is better)"));
+        if ui.add(egui::Slider::new(&mut ui_state.detail_level, 3..=50).text("Grid Size (Lower is better)")).changed() {
+            ui_state.is_up_to_date = false;
+        }
         // ui.label("Z Value");
-        ui.add(egui::Slider::new(&mut ui_state.z_value, 0.0..=100.0).text("Z Coordinate"));
-        ui.add(egui::Slider::new(&mut ui_state.x_y_scale, 0.001..=0.04).text("X/Y Scale (Zoom)"));
-        ui.add(egui::Slider::new(&mut ui_state.darkness, 0.0..=1.0).text("Darkness"));
+        if ui.add(egui::Slider::new(&mut ui_state.z_value, 0.0..=100.0).text("Z Coordinate")).changed() {
+            ui_state.is_up_to_date = false;
+        }
+        // ui.add(egui::Slider::new(&mut ui_state.x_y_scale, 0.001..=0.04).text("X/Y Scale (Zoom)"));
+        // ui.add(egui::Slider::new(&mut ui_state.darkness, 0.0..=1.0).text("Darkness"));
+        if ui.add(egui::Slider::new(&mut ui_state.x_y_scale, 0.001..=0.04).text("X/Y Scale (Zoom)")).changed() {
+            ui_state.is_up_to_date = false;
+        }
+        if ui.add(egui::Slider::new(&mut ui_state.darkness, 0.0..=1.0).text("Darkness")).changed() {
+            ui_state.is_up_to_date = false;
+        }
         // ui.label("Lerped or midpoint");
-        ui.checkbox(&mut ui_state.lerped, "Lerped");
+        // ui.checkbox(&mut ui_state.lerped, "Lerped");
+        if ui.add(egui::Checkbox::new(&mut ui_state.lerped, "Lerped")).changed() {
+            ui_state.is_up_to_date = false;
+        }
         ui.checkbox(&mut ui_state.animate, "Animate");
-        ui.checkbox(&mut ui_state.wireframe, "Wireframe");
+        // ui.checkbox(&mut ui_state.wireframe, "Wireframe");
+        if ui.add(egui::Checkbox::new(&mut ui_state.wireframe, "Wireframe")).changed() {
+            ui_state.is_up_to_date = false;
+        }
     });
 
     if ui_state.animate {
         ui_state.z_value += 0.01;
+        ui_state.is_up_to_date = false;
     }
 }
 
 fn marching_squares_system(
-    ui_state: Res<UiState>,
+    mut ui_state: ResMut<UiState>,
     mut marching_squares_meshes: Query<(&mut Mesh2dHandle, &MarchingSquares)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut lines: ResMut<DebugLines>,
 ) {
     // println!("marching_squares_meshes: {:?}", marching_squares_meshes.iter().len());
-    if ui_state.is_changed() {
+    if !ui_state.is_up_to_date {
         for (mut mesh_handle, marching_square) in marching_squares_meshes.iter_mut() {
             // let mut mesh = meshes.get_mut(mesh_handle);
             // if mesh.is_some() {
@@ -199,5 +218,6 @@ fn marching_squares_system(
 
             *mesh_handle = meshes.add(new_mesh).into();
         }
+        ui_state.is_up_to_date = true;
     }
 }
