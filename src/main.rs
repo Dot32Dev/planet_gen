@@ -1,4 +1,4 @@
-use bevy::ui;
+// use bevy::ui;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy::render::mesh::{self, PrimitiveTopology, Indices};
 use bevy::sprite::Mesh2dHandle;
@@ -7,6 +7,8 @@ use bevy_prototype_debug_lines::*;
 
 mod generate_vertices;
 use generate_vertices::generate_vertices;
+use generate_vertices::MarchingSquares;
+use generate_vertices::Fade;
 
 #[derive(Default, Resource)]
 struct UiState {
@@ -20,10 +22,17 @@ struct UiState {
     is_up_to_date: bool,
 }
 
-#[derive(Component)]
-struct MarchingSquares {
-    size: f32,
-}
+// struct Fade {
+//     start: f32,
+//     end: f32,
+// }
+
+// #[derive(Component)]
+// struct MarchingSquares {
+//     radius: f32,
+//     fade_out: Option<Fade>,
+//     fade_in: Option<Fade>,
+// }
 
 #[derive(Component)]
 struct Wireframe {
@@ -34,8 +43,8 @@ fn main() {
     App::new()
         // .init_resource::<UiState>()
         .insert_resource(UiState {
-            detail_level: 10,
-            z_value: 0.0,
+            detail_level: 6,
+            z_value: 58.0,
             lerped: true,
             animate: false,
             x_y_scale: 0.0225,
@@ -84,7 +93,12 @@ fn setup(
             ..default()
         }, 
         MarchingSquares {
-            size: 300.0,
+            radius: 200.0,
+            fade_out: Some(Fade {
+                start: 150.0,
+                end: 300.0,
+            }),
+            fade_in: None
         },
     ));
     commands.spawn((
@@ -94,7 +108,12 @@ fn setup(
             ..default()
         }, 
         MarchingSquares {
-            size: 140.0,
+            radius: 140.0,
+            fade_out: Some(Fade {
+                start: 150.0,
+                end: 300.0,
+            }),
+            fade_in: None
         },
     ));
 }
@@ -162,7 +181,7 @@ fn marching_squares_system(
 
             //     println!("Updated mesh")
             // }
-            let (mut positions, normals, uvs, mut indices) = generate_vertices(ui_state.detail_level as f32, ui_state.z_value as f32, ui_state.lerped, ui_state.x_y_scale, ui_state.darkness);
+            let (mut positions, normals, uvs, mut indices) = generate_vertices(ui_state.detail_level as f32, ui_state.z_value as f32, ui_state.lerped, ui_state.x_y_scale, ui_state.darkness, marching_square);
                 
             // Remove triangles that are outside of the circle
             // let mut to_remove = Vec::new();
@@ -175,7 +194,7 @@ fn marching_squares_system(
                     let dist_a = Vec3::new(a[0], a[1], 0.0).length();
                     let dist_b = Vec3::new(b[0], b[1], 0.0).length();
                     let dist_c = Vec3::new(c[0], c[1], 0.0).length();
-                    if dist_a > marching_square.size && dist_b > marching_square.size && dist_c > marching_square.size {
+                    if dist_a > marching_square.radius && dist_b > marching_square.radius && dist_c > marching_square.radius {
                         // positions.remove(indices[i + 2] as usize);
                         // positions.remove(indices[i + 1] as usize);
                         // positions.remove(indices[i] as usize);
@@ -194,8 +213,8 @@ fn marching_squares_system(
             for i in 0..positions.len() {
                 let mut pos = Vec3::new(positions[i][0], positions[i][1], 0.0);
                 let dist = pos.length();
-                if dist > marching_square.size {
-                    pos = pos.normalize() * marching_square.size;
+                if dist > marching_square.radius {
+                    pos = pos.normalize() * marching_square.radius;
                 }
                 positions[i] = pos.into();
             }

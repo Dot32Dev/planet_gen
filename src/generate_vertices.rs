@@ -1,5 +1,18 @@
 use noise::{NoiseFn, Simplex, Perlin};
 use bevy::math::Vec2;
+use bevy::ecs::component::Component;
+
+pub struct Fade {
+    pub start: f32,
+    pub end: f32,
+}
+
+#[derive(Component)]
+pub struct MarchingSquares {
+    pub radius: f32,
+    pub fade_out: Option<Fade>,
+    pub fade_in: Option<Fade>,
+}
 
 pub fn generate_vertices(
 	square_size: f32, // Detail level
@@ -7,6 +20,7 @@ pub fn generate_vertices(
 	lerped: bool,
 	x_y_scale: f32,
 	darkness: f32,
+	marching_square: &MarchingSquares,
 ) -> (std::vec::Vec<[f32; 3]>, std::vec::Vec<[f32; 3]>, std::vec::Vec<[f32; 2]>, std::vec::Vec<u32>) {
 	let simplex = Simplex::new(1);
 
@@ -25,13 +39,20 @@ pub fn generate_vertices(
 
 			let mut noise = simplex.get([x as f64 * x_y_scale as f64, y as f64 * x_y_scale as f64, z_value as f64]) as f32 + darkness;
 			
-			// Noise should be as normal when distance < 150, but fade out when distance > 150 and distance < 300
-			if distance_from_center > 150.0 {
-				noise = (1.0 - inverse_lerp(150.0, 300.0, distance_from_center)) * noise;
-			}
-
-			if distance_from_center > 300.0 {
-				noise = 0.0;
+			// Noise should be as normal when distance < fade_out start, but fade out when distance > fade_out start and distance < fade_out end
+			// if distance_from_center > marching_square.fade_out.unwrap().start {
+			// 	noise = (1.0 - inverse_lerp(150.0, 300.0, distance_from_center)) * noise;
+			// }
+			match &marching_square.fade_out {
+				Some(fade) => {
+					if distance_from_center > fade.start {
+						noise = (1.0 - inverse_lerp(fade.start, fade.end, distance_from_center)) * noise;
+					}
+					if distance_from_center > fade.end {
+						noise = 0.0;
+					}
+				}
+				None => {}
 			}
 			
 
