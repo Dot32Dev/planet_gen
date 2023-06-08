@@ -43,7 +43,7 @@ fn main() {
     App::new()
         // .init_resource::<UiState>()
         .insert_resource(UiState {
-            detail_level: 6,
+            detail_level: 3,
             z_value: 58.0,
             lerped: true,
             animate: false,
@@ -86,6 +86,7 @@ fn setup(
     //         size: 300.0,
     //     },
     // ));
+    // Grass
     commands.spawn((
         MaterialMesh2dBundle {
             transform: Transform::from_xyz(0.0, 0.0, 0.2),
@@ -101,6 +102,7 @@ fn setup(
             fade_in: None
         },
     ));
+    // Dirt
     commands.spawn((
         MaterialMesh2dBundle {
             transform: Transform::from_xyz(0.0, 0.0, 0.3),
@@ -114,6 +116,25 @@ fn setup(
                 end: 300.0,
             }),
             fade_in: None
+        },
+    ));
+    // Clouds
+    commands.spawn((
+        MaterialMesh2dBundle {
+            transform: Transform::from_xyz(0.0, 0.0, 0.4),
+            material: materials.add(Color::rgb(232.0/255.0, 244.0/255.0, 244.0/255.0).into()),
+            ..default()
+        }, 
+        MarchingSquares {
+            radius: 350.0,
+            fade_out: Some(Fade {
+                start: 230.0,
+                end: 330.0,
+            }),
+            fade_in: Some(Fade {
+                start: 100.0,
+                end: 230.0,
+            }),
         },
     ));
 }

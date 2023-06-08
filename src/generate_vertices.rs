@@ -54,7 +54,17 @@ pub fn generate_vertices(
 				}
 				None => {}
 			}
-			
+			match &marching_square.fade_in {
+				Some(fade) => {
+					if distance_from_center < fade.end {
+						noise = inverse_lerp(fade.start, fade.end, distance_from_center) * noise;
+					}
+					if distance_from_center < fade.start {
+						noise = 0.0;
+					}
+				}
+				None => {}
+			}
 
             grid[row][col] = noise;
 
